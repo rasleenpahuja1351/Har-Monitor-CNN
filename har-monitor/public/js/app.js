@@ -22,10 +22,19 @@
   const setK = (k, v) => document.querySelectorAll(`[data-k="${k}"]`).forEach((e) => (e.textContent = v));
   const pct = (v, d = 1) => (v * 100).toFixed(d) + '%';
   const api = async (path, opts) => {
-    const r = await fetch(path, opts);
+    let r;
+    try { r = await fetch(path, opts); }
+    catch (_) { throw new Error('Could not reach the API. Check your connection and try again.'); }
     if (!r.ok) {
-      let msg = r.status + ' ' + r.statusText;
-      try { const j = await r.json(); msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail); } catch (_) {}
+      let msg = `Server error ${r.status}${r.statusText ? ' ' + r.statusText : ''}`;
+      const body = await r.text().catch(() => '');
+      try {
+        const j = JSON.parse(body);
+        if (j.detail) msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+      } catch (_) {
+        if (r.status === 413) msg = 'File chunk too large for the server. Try a smaller file.';
+        else if (r.status >= 500) msg = `The API is unavailable right now (HTTP ${r.status}). Please try again shortly.`;
+      }
       throw new Error(msg);
     }
     return r.json();
