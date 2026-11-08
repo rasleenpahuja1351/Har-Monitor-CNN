@@ -1,0 +1,6 @@
+# Only for training / exporting the model locally. NOT deployed.
+pandas
+scikit-learn
+matplotlib
+joblib
+tensorflow-cpu==2.21.0

@@ -1,0 +1,7 @@
+training/data/
+training/*.keras
+training/*.joblib
+training/*.png
+**/__pycache__/
+.venv/
+.pytest_cache/

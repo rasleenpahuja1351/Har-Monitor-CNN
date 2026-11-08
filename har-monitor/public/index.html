@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HAR Monitor · Human Activity Recognition</title>
+<meta name="description" content="Human activity recognition for the factory floor: 561 sensor features, 6 activities, Keras model served with FastAPI.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23FF6FB5'/%3E%3Cpath d='M3 12h4l3-7 4 14 3-7h4' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css?v=3">
+</head>
+<body>
+
+<!-- Ambient background: drifting gradient, two floating orbs, cursor glow (all behind the boxes) -->
+<div class="amb-bg" aria-hidden="true"></div>
+<div class="amb-orb amb-orb1" aria-hidden="true"></div>
+<div class="amb-orb amb-orb2" aria-hidden="true"></div>
+<div class="amb-glow" aria-hidden="true"></div>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <nav class="side" aria-label="Sections">
+    <a class="logo" href="#overview" aria-label="HAR Monitor home">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
+    </a>
+    <a class="ic" href="#overview" aria-label="Overview" data-sec="overview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></a>
+    <a class="ic" href="#model" aria-label="Model performance" data-sec="model"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></a>
+    <a class="ic" href="#live" aria-label="Live prediction" data-sec="live"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 10h8M12 14l-3 6M12 14l3 6"/></svg></a>
+    <a class="ic" href="#predict" aria-label="Batch predict" data-sec="predict"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></a>
+    <a class="ic" href="/api/docs" aria-label="API documentation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></svg></a>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <div class="t">HAR Monitor<span>Human activity recognition · UCI HAR</span></div>
+      <div class="tr">
+        <span class="chip" id="api-chip"><span class="dot" id="api-dot"></span><span id="api-text">Connecting to API…</span></span>
+        <span class="chip hide-sm">Model: Keras Dense v1</span>
+        <a class="chip link hide-sm" href="/api/docs">API docs</a>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="intro" id="overview">
+        <h1>Human Activity Recognition for the factory floor</h1>
+        <p>Accelerometer and gyroscope signals (50 Hz, 2.56 s windows) are turned into 561 features, classified into 6 activities by a Keras network, and served through FastAPI to drive line safety responses.</p>
+      </section>
+
+      <div class="sec"><h2>Dataset &amp; model summary</h2></div>
+      <div class="kpis" id="kpis">
+        <div class="k" style="--g:linear-gradient(90deg,#FF6FB5,#8B5CF6)"><div class="l">Training windows</div><div class="v" data-k="train">–</div><div class="s" data-k="train_s">&nbsp;</div></div>
+        <div class="k" style="--g:linear-gradient(90deg,#5EF0B0,#4F7CF0)"><div class="l">Test windows</div><div class="v" data-k="test">–</div><div class="s" data-k="test_s">&nbsp;</div></div>
+        <div class="k" style="--g:linear-gradient(90deg,#FFB23E,#FF7AB8)"><div class="l">Engineered features</div><div class="v" data-k="feat">–</div><div class="s">time + frequency domain</div></div>
+        <div class="k" style="--g:linear-gradient(90deg,#4FE3D6,#5B7CF7)"><div class="l">Activity classes</div><div class="v" data-k="cls">–</div><div class="s">static + dynamic</div></div>
+        <div class="k" style="--g:linear-gradient(90deg,#FFC24D,#FF6FB5)"><div class="l">Keras test accuracy</div><div class="v" data-k="acc">–</div><div class="s" data-k="acc_s">&nbsp;</div></div>
+      </div>
+
+      <div class="row r-2" id="model">
+        <div class="p">
+          <div class="ph"><div><h3>Training curves · Keras Dense</h3><div class="sub" id="curve-sub">Subject-wise validation</div></div>
+          <div class="leg"><span><i style="background:#FFB23E"></i>Train accuracy</span><span><i style="background:#FF6FB5"></i>Validation accuracy</span></div></div>
+          <svg id="curve" class="chart" viewBox="0 0 760 262" role="img" aria-label="Training and validation accuracy per epoch"></svg>
+        </div>
+        <div class="p">
+          <div class="ph"><div><h3>Per-class F1 · test set</h3><div class="sub">Keras vs Random Forest baseline</div></div>
+          <div class="leg"><span><i style="background:#FF8A5B"></i>Keras</span><span><i style="background:#5B7CF7"></i>Random Forest</span></div></div>
+          <svg id="f1" class="chart" viewBox="0 0 600 262" role="img" aria-label="F1 score per activity for both models"></svg>
+        </div>
+      </div>
+
+      <div class="row r-3" id="live">
+        <div class="p">
+          <h3>Confusion matrix · Keras</h3><div class="sub" id="cm-sub">Rows = true activity, columns = predicted</div>
+          <svg id="cm" class="chart" viewBox="0 0 480 300" role="img" aria-label="Confusion matrix of the Keras model on the test set"></svg>
+        </div>
+        <div class="p">
+          <div class="ph"><div><h3>Live prediction</h3><div class="sub" id="live-sub">Real held-out test windows, one every 2.56 s</div></div>
+            <button type="button" class="btn ghost" id="live-toggle" aria-pressed="false">Pause</button></div>
+          <div class="live">
+            <svg id="donut" viewBox="0 0 210 210" role="img" aria-label="Probability of the predicted activity"></svg>
+            <div class="dl" id="dl"></div>
+          </div>
+          <div class="truth" id="truth">&nbsp;</div>
+          <div class="flag" id="response">Waiting for the first window…</div>
+        </div>
+        <div class="p">
+          <h3>Training set · class distribution</h3><div class="sub">Windows per activity (balanced, no class weights needed)</div>
+          <svg id="dist" class="chart" viewBox="0 0 480 300" role="img" aria-label="Number of training windows per activity"></svg>
+        </div>
+      </div>
+
+      <div class="row r-21">
+        <div class="p">
+          <h3>Pipeline</h3><div class="sub">From wearable sensor to factory response</div>
+          <div class="pipe" id="pipe"></div>
+          <div class="tl-h"><span>Live activity timeline · last <span id="tl-n">0</span> windows</span><span class="sub" id="tl-acc"></span></div>
+          <div class="tlbar" id="tl" aria-label="Recent predicted activities"></div>
+          <div class="tleg" id="tleg"></div>
+        </div>
+        <div class="p">
+          <h3>Model comparison</h3><div class="sub">Same subject-wise split, same test set</div>
+          <div class="cmp">
+            <div class="cm1 on"><div class="l">Keras Dense</div><div class="v" data-k="nn_acc">–</div><div class="s" data-k="nn_f1"></div></div>
+            <div class="cm1"><div class="l">Random Forest</div><div class="v" data-k="rf_acc">–</div><div class="s" data-k="rf_f1"></div></div>
+          </div>
+          <div class="mini">
+            <div><span>Validation accuracy (Keras)</span><span data-k="val">–</span></div>
+            <div><span>Parameters (Keras)</span><span data-k="params">–</span></div>
+            <div><span>Weakest pair</span><span>Sitting ↔ Standing</span></div>
+            <div><span>Server inference / window</span><span id="lat">–</span></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="row" id="predict">
+        <div class="p">
+          <div class="ph"><div><h3>Batch predict</h3><div class="sub">Upload a CSV with the 561 feature columns (for example the Kaggle <code>test.csv</code>). Rows are sent to <code>/api/predict/batch</code> in chunks.</div></div></div>
+          <div class="up-grid">
+            <label class="drop" id="drop" for="csv">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+              <span class="drop-t">Drop a CSV here or browse</span>
+              <span class="sub">If it has an <code>Activity</code> column, accuracy is computed too. <code>subject</code> is ignored.</span>
+              <input id="csv" type="file" accept=".csv,text/csv">
+            </label>
+            <div class="res" id="res">
+              <div class="sub">No file yet.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">UCI HAR dataset · Keras model exported to NumPy · FastAPI on Vercel</footer>
+    </main>
+  </div>
+</div>
+
+<script src="/js/charts.js?v=3"></script>
+<script src="/js/app.js?v=3"></script>
+</body>
+</html>
